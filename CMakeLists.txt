@@ -4,22 +4,29 @@ project(StenenkoPrizm)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
-# Adding GLFW
 add_subdirectory(libs/glfw-3.4)
-include_directories(libs/glfw-3.4/include)
 
-# Adding GLAD
 add_library(glad STATIC libs/glad/src/glad.c)
 target_include_directories(glad PUBLIC libs/glad/include)
 
-add_executable(StenenkoPrizm src/main.cpp)
+add_executable(StenenkoPrizm 
+    src/main.cpp 
+    src/shaderClass.cpp 
+    src/VBO.cpp
+    src/EBO.cpp
+    src/VAO.cpp
+)
 
-# Linking GLFW and GLAD
+target_include_directories(StenenkoPrizm PUBLIC 
+    ${PROJECT_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/libs/glad/include
+    ${CMAKE_SOURCE_DIR}/libs/glfw-3.4/include
+)
+
 target_link_libraries(StenenkoPrizm glfw glad)
 
-# On Windows adding libraries of OpenGL
 if (WIN32)
     target_link_libraries(StenenkoPrizm opengl32)
 endif()
