@@ -30,18 +30,27 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void processInput(GLFWwindow *window)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
+
 int main() 
 {
+    // Initializing GLFW
     if (!glfwInit()) 
     {
         std::cerr << "Failed to initialize GLFW\n";
         return -1;
     }
 
+    // Hints for GLFW to know what version of OpenGL to use
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // using Core profile to use latest OpenGL functions
 
+    // Creating window to work with
     GLFWwindow* window = glfwCreateWindow(800, 600, "GLFW + GLAD Triangle example", nullptr, nullptr);
     if (!window) 
     {
@@ -51,48 +60,51 @@ int main()
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // callback function will be called when window is changed in size
 
+    // Loading GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) 
     {
         std::cerr << "Failed to initialize GLAD\n";
         return -1;
     }
 
+    // Viewport from bottom left corner to upper right corner
     glViewport(0, 0, 800, 600);
 
-
-
+    // Initializing shader program
     Shader shaderProgram("../src/shaders/default.vert", "../src/shaders/default.frag");
 
-
-
+    // Creating Vertex Array Object and binding it
     VAO VAO1;
     VAO1.Bind();
 
-    VBO VBO1(vertices, sizeof(vertices));
-    EBO EBO1(indices, sizeof(indices));
+    VBO VBO1(vertices, sizeof(vertices));   // Initializing Vertex Buffer Object
+    EBO EBO1(indices, sizeof(indices));     // Initializing Element Buffer Object
 
-    VAO1.LinkVBO(VBO1, 0);
-    VAO1.Unbind();
+    VAO1.LinkVBO(VBO1, 0);  // Linking Objects
+    VAO1.Unbind();          // Unbinding Objects, so that we can't change them by accident
     VBO1.Unbind();
     EBO1.Unbind();
 
+    // Main rendering cycle
     while (!glfwWindowShouldClose(window)) 
     {
-        glfwPollEvents();
+        processInput(window); // Input control for out window
 
-        glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.07f, 0.13f, 0.17f, 1.0f); // specifying the color to clear a window with
+        glClear(GL_COLOR_BUFFER_BIT); // entire color buffer will be filled with specified color in 'glClearColor'
 
         shaderProgram.Activate();
         VAO1.Bind();
 
-        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0); // drawing 9 vertices with primitive of GL_TRIANGLES
 
-        glfwSwapBuffers(window);
+        glfwPollEvents(); // Polling events such as opening it, resizing, etc.
+        glfwSwapBuffers(window); // swapping front and back buffers
     }
 
+    // Deleting objects from memory and terminating current window
     VAO1.Delete();
     VBO1.Delete();
     EBO1.Delete();
