@@ -1,6 +1,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb/stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 #include <cmath>
@@ -10,21 +13,32 @@
 #include <VBO.h>
 #include <EBO.h>
 
+const unsigned int width = 800;
+const unsigned int height = 800;
+
 // Vertices coordinates
 GLfloat vertices[] =
 { //     COORDINATES     /        COLORS      /   TexCoord  //
-	-0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
-	-0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // Upper left corner
-	 0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
-	 0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
+	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
+	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
+	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
+	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
+	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
 };
 
 // Indices for vertices order
 GLuint indices[] =
 {
-	0, 2, 1, // Upper triangle
-	0, 3, 2 // Lower triangle
+	0, 1, 2,
+	0, 2, 3,
+	0, 1, 4,
+	1, 2, 4,
+	2, 3, 4,
+	3, 0, 4
 };
+
+
+
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) 
@@ -37,6 +51,10 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
+
+
+
+
 
 int main() 
 {
@@ -53,7 +71,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // using Core profile to use latest OpenGL functions
 
     // Creating window to work with
-    GLFWwindow* window = glfwCreateWindow(800, 800, "Stenenko prizm is approaching", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(width, height, "Stenenko prizm is approaching", nullptr, nullptr);
     if (!window) 
     {
         std::cerr << "Failed to create GLFW window\n";
@@ -72,7 +90,7 @@ int main()
     }
 
     // Viewport from bottom left corner to upper right corner
-    glViewport(0, 0, 800, 800);
+    glViewport(0, 0, width, height);
 
     // Initializing shader program
     Shader shaderProgram("../src/shaders/default.vert", "../src/shaders/default.frag");
@@ -121,20 +139,49 @@ int main()
     shaderProgram.Activate();
     glUniform1f(tex0Uni, 0);
 
+    float rotation = 0.0f;
+    double prevTime = glfwGetTime();
+
+    glEnable(GL_DEPTH_TEST);
+
     // Main rendering cycle
     while (!glfwWindowShouldClose(window)) 
     {
         processInput(window); // Input control for out window
 
-        glClearColor(0.3f, 0.0f, 0.0f, 1.0f); // specifying the color to clear a window with
-        glClear(GL_COLOR_BUFFER_BIT); // entire color buffer will be filled with specified color in 'glClearColor'
+        glClearColor(0.15f, 0.0f, 0.0f, 1.0f); // specifying the color to clear a window with
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // entire color buffer will be filled with specified color in 'glClearColor'
 
         shaderProgram.Activate();
+
+        double crntTime = glfwGetTime();
+        if (crntTime - prevTime >= 1 / 60)
+        {
+            rotation += 0.5f;
+            prevTime = crntTime;
+        }
+
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 proj = glm::mat4(1.0f);
+
+        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+        view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
+        proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
+
+        GLuint modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        GLuint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        GLuint projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
         glUniform1f(uniID, 0.5f);
+        
         glBindTexture(GL_TEXTURE_2D, texture);
         VAO1.Bind();
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // drawing 9 vertices with primitive of GL_TRIANGLES
+        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(*indices), GL_UNSIGNED_INT, 0); // drawing 9 vertices with primitive of GL_TRIANGLES
 
         glfwPollEvents(); // Polling events such as opening it, resizing, etc.
         glfwSwapBuffers(window); // swapping front and back buffers

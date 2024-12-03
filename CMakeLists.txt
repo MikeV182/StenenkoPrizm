@@ -14,6 +14,8 @@ target_include_directories(glad PUBLIC libs/glad/include)
 add_library(stb STATIC src/stb.cpp)
 target_include_directories(stb PUBLIC libs/stb)
 
+add_subdirectory(libs/glm)
+
 add_executable(StenenkoPrizm
     src/main.cpp 
     src/shaderClass.cpp 
@@ -29,7 +31,7 @@ target_include_directories(StenenkoPrizm PUBLIC
     ${CMAKE_SOURCE_DIR}/libs
 )
 
-target_link_libraries(StenenkoPrizm glfw glad stb)
+target_link_libraries(StenenkoPrizm glfw glad stb glm)
 
 if (WIN32)
     target_link_libraries(StenenkoPrizm opengl32)

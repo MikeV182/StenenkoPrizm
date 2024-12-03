@@ -1,0 +1,2 @@
+/home/mike/Documents/StenenkoPrizm/libs/glm/build/CMakeFiles/edit_cache.dir
+/home/mike/Documents/StenenkoPrizm/libs/glm/build/CMakeFiles/rebuild_cache.dir
