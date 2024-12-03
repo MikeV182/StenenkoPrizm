@@ -1,17 +1,28 @@
 #version 330 core
-layout (location = 0) in vec3 aPos; // position with attribute position set to zero
+
+// Positions/Coordinates
+layout (location = 0) in vec3 aPos;
+// Colors
 layout (location = 1) in vec3 aColor;
+// Texture Coordinates
+layout (location = 2) in vec2 aTex;
 
-out vec3 color; // specifying a color output to the fragment shader
 
-uniform float scale; // never write uniforms if you not planning to use them
-                     // otherwise OpenGL will delete them automaticaly and that may cause errors
+// Outputs the color for the Fragment Shader
+out vec3 color;
+// Outputs the texture coordinates to the fragment shader
+out vec2 texCoord;
+
+// Controls the scale of the vertices
+uniform float scale;
+
 
 void main()
 {
-   gl_Position = vec4(aPos.x + aPos.x * scale, 
-                      aPos.y + aPos.y * scale,
-                      aPos.z + aPos.z * scale,
-                      1.0); // giving vec3 to constructor of vec4
-   color = aColor;
+	// Outputs the positions/coordinates of all vertices
+	gl_Position = vec4(aPos.x + aPos.x * scale, aPos.y + aPos.y * scale, aPos.z + aPos.z * scale, 1.0);
+	// Assigns the colors from the Vertex Data to "color"
+	color = aColor;
+	// Assigns the texture coordinates from the Vertex Data to "texCoord"
+	texCoord = aTex;
 }
